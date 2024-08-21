@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformaciones en Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .controls label {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+
+    <div class="controls">
+        <label>
+            Figura:
+            <select id="shapeSelect">
+                <option value="square">Cuadrado</option>
+                <option value="circle">Círculo</option>
+                <option value="triangle">Triángulo</option>
+            </select>
+        </label>
+        <label>
+            Tipo de coordenadas:
+            <select id="coordinateType">
+                <option value="cartesian">Cuadráticas (Cartesianas)</option>
+                <option value="polar">Polares</option>
+            </select>
+        </label>
+        <label>
+            Coordenada X / Radio:
+            <input type="number" id="coordinateX" value="100" step="1">
+        </label>
+        <label>
+            Coordenada Y / Ángulo (grados):
+            <input type="number" id="coordinateY" value="100" step="1">
+        </label>
+        <label>
+            Escalado X:
+            <input type="number" id="scaleX" value="1.5" step="0.1" min="0.1">
+        </label>
+        <label>
+            Escalado Y:
+            <input type="number" id="scaleY" value="1.5" step="0.1" min="0.1">
+        </label>
+        <button onclick="updateCanvas()">Actualizar</button>
+    </div>
+
+    <script>
+        // Obtén el contexto del lienzo
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Elementos de control
+        const shapeSelect = document.getElementById('shapeSelect');
+        const coordinateType = document.getElementById('coordinateType');
+        const coordinateX = document.getElementById('coordinateX');
+        const coordinateY = document.getElementById('coordinateY');
+        const scaleX = document.getElementById('scaleX');
+        const scaleY = document.getElementById('scaleY');
+
+        // Convierte grados a radianes
+        function degreesToRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        // Convierte coordenadas polares a cartesianas
+        function polarToCartesian(radius, angleDegrees) {
+            const angleRadians = degreesToRadians(angleDegrees);
+            const x = radius * Math.cos(angleRadians);
+            const y = radius * Math.sin(angleRadians);
+            return { x, y };
+        }
+
+        // Dibuja la figura seleccionada
+        function drawShape(shape, x, y, size) {
+            ctx.beginPath();
+            switch (shape) {
+                case 'circle':
+                    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                    break;
+                case 'triangle':
+                    ctx.moveTo(x, y - size / 2);
+                    ctx.lineTo(x - size / 2, y + size / 2);
+                    ctx.lineTo(x + size / 2, y + size / 2);
+                    ctx.closePath();
+                    break;
+                case 'square':
+                default:
+                    ctx.rect(x - size / 2, y - size / 2, size, size);
+                    break;
+            }
+            ctx.fill();
+        }
+
+        // Dibuja la figura con las transformaciones aplicadas
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const shape = shapeSelect.value;
+            const coordType = coordinateType.value;
+            let x = parseFloat(coordinateX.value);
+            let y = parseFloat(coordinateY.value);
+            const sx = parseFloat(scaleX.value);
+            const sy = parseFloat(scaleY.value);
+
+            // Si las coordenadas son polares, convertirlas a cartesianas
+            if (coordType === 'polar') {
+                const cartesianCoords = polarToCartesian(x, y);
+                x = cartesianCoords.x;
+                y = cartesianCoords.y;
+            }
+
+            ctx.save(); // Guarda el estado actual
+            ctx.translate(x + canvas.width / 2, y + canvas.height / 2); // Traslada el contexto
+            ctx.scale(sx, sy); // Escala el contexto
+            ctx.fillStyle = 'blue';
+            drawShape(shape, 0, 0, 100); // Dibuja la figura centrada en (0, 0)
+            ctx.restore(); // Restaura el estado
+        }
+
+        // Actualiza el lienzo cuando cambian los controles
+        function updateCanvas() {
+            draw();
+        }
+
+        // Inicializa el lienzo con los valores predeterminados
+        draw();
+    </script>
+</body>
+</html>
