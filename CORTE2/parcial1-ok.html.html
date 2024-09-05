@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dibujar Polígono Regular</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dibujar Polígono Regular</h1>
+
+    <label for="sides">Número de lados:</label>
+    <input type="number" id="sides" min="3" value="5"><br><br>
+
+    <label for="apothem">Apotema:</label>
+    <input type="number" id="apothem" min="1" value="50"><br><br>
+
+    <label for="coordType">Tipo de coordenadas:</label>
+    <select id="coordType">
+        <option value="cartesian">Cartesianas</option>
+        <option value="polar">Polares</option>
+    </select><br><br>
+
+    <div id="cartesianInput">
+        <label for="centerX">Centro X (cartesianas):</label>
+        <input type="number" id="centerX" value="200"><br><br>
+
+        <label for="centerY">Centro Y (cartesianas):</label>
+        <input type="number" id="centerY" value="200"><br><br>
+    </div>
+
+    <div id="polarInput" style="display:none;">
+        <label for="radius">Radio (polares):</label>
+        <input type="number" id="radius" value="200"><br><br>
+
+        <label for="theta">Ángulo θ (en grados):</label>
+        <input type="number" id="theta" value="0"><br><br>
+    </div>
+
+    <button onclick="drawPolygon()">Dibujar Polígono</button>
+
+    <canvas id="polygonCanvas" width="400" height="400"></canvas>
+
+    <script>
+        // Mostrar u ocultar los inputs dependiendo del tipo de coordenadas
+        document.getElementById('coordType').addEventListener('change', function() {
+            const coordType = document.getElementById('coordType').value;
+            if (coordType === 'cartesian') {
+                document.getElementById('cartesianInput').style.display = 'block';
+                document.getElementById('polarInput').style.display = 'none';
+            } else {
+                document.getElementById('cartesianInput').style.display = 'none';
+                document.getElementById('polarInput').style.display = 'block';
+            }
+        });
+
+        // Clase Coordenadas Cartesianas
+        class CoordenadasCartesianas {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            getX() {
+                return this.x;
+            }
+
+            getY() {
+                return this.y;
+            }
+
+            toPolar() {
+                const r = Math.sqrt(this.x * this.x + this.y * this.y);
+                const theta = Math.atan2(this.y, this.x) * 180 / Math.PI;
+                return new CoordenadasPolares(r, theta);
+            }
+        }
+
+        // Clase Coordenadas Polares
+        class CoordenadasPolares {
+            constructor(r, theta) {
+                this.r = r;
+                this.theta = theta; // en grados
+            }
+
+            getR() {
+                return this.r;
+            }
+
+            getTheta() {
+                return this.theta;
+            }
+
+            toCartesian() {
+                const x = this.r * Math.cos(this.theta * Math.PI / 180);
+                const y = this.r * Math.sin(this.theta * Math.PI / 180);
+                return new CoordenadasCartesianas(x, y);
+            }
+        }
+
+        function drawPolygon() {
+            const canvas = document.getElementById('polygonCanvas');
+            const ctx = canvas.getContext('2d');
+            const sides = document.getElementById('sides').value;
+            const apothem = document.getElementById('apothem').value;
+
+            // Obtener el tipo de coordenadas seleccionado
+            const coordType = document.getElementById('coordType').value;
+            let centerX, centerY;
+
+            // Si el usuario eligió coordenadas cartesianas
+            if (coordType === 'cartesian') {
+                const cartX = parseFloat(document.getElementById('centerX').value);
+                const cartY = parseFloat(document.getElementById('centerY').value);
+                const cartesianCenter = new CoordenadasCartesianas(cartX, cartY);
+                centerX = cartesianCenter.getX();
+                centerY = cartesianCenter.getY();
+            } 
+            // Si el usuario eligió coordenadas polares
+            else {
+                const radius = parseFloat(document.getElementById('radius').value);
+                const theta = parseFloat(document.getElementById('theta').value);
+                const polarCenter = new CoordenadasPolares(radius, theta);
+                const cartesianCenter = polarCenter.toCartesian();
+                centerX = cartesianCenter.getX();
+                centerY = cartesianCenter.getY();
+            }
+
+            // Calculamos el radio usando el apotema
+            const radiusPolygon = apothem / Math.cos(Math.PI / sides);
+
+            // Limpiar el canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Ajustar el ángulo inicial para que el polígono no esté ladeado
+            const angleOffset = (Math.PI / 2); // 90 grados en radianes
+
+            // Dibujar el polígono regular centrado
+            ctx.beginPath();
+            for (let i = 0; i < sides; i++) {
+                const angle = (2 * Math.PI / sides) * i - angleOffset;
+
+                // Convertir el ángulo y el radio a coordenadas cartesianas
+                let polar = new CoordenadasPolares(radiusPolygon, angle * 180 / Math.PI); // Pasar a grados
+                let cartesian = polar.toCartesian();
+
+                const x = centerX + cartesian.getX();
+                const y = centerY + cartesian.getY();
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
+
