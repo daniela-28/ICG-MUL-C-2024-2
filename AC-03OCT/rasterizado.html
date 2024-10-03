@@ -9,7 +9,15 @@
 <body>
     <canvas id="canvas" width="500" height="500"></canvas>
     <script>
-        dibujar();
+        const puntos = [
+            new Punto(100, 100),
+            new Punto(200, 50),
+            new Punto(300, 100),
+            new Punto(250, 200),
+            new Punto(150, 200)
+        ];
+        dibujarRasterizado(puntos);
+        console.log("El polígono es: " + verificarConvexidad(puntos));
     </script>
 </body>
 </html>
